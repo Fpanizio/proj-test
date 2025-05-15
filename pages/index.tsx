@@ -6,6 +6,7 @@ import { useServiceClientes } from '../service/clientes'
 import { Button, CircularProgress, Link } from '@chakra-ui/react'
 import { useState } from 'react'
 import { ArrowBackIcon, ArrowForwardIcon } from '@chakra-ui/icons'
+import { useTokenContext } from '../contexts/TokenContext'
 
 export default function Home() {
 
@@ -17,11 +18,12 @@ export default function Home() {
     queryKey: ['getAllData', page],
     queryFn: () => getAllClientes(page),
     staleTime: 1000 * 60 * 5, // 5 minutes
-    // refetchOnWindowFocus: true,
   })
 
   const handleNextPage = () => setPage((prev) => prev + 1);
   const handlePreviousPage = () => setPage((prev) => Math.max(prev - 1, 1));
+
+  const { apiToken } = useTokenContext();
 
   return (
     <>
@@ -33,8 +35,9 @@ export default function Home() {
       </Head>
 
       <main className={styles.main}>
-        <div style={{ display: 'flex', justifyContent: 'center', width: '100%', fontSize: '20px', padding: '10px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', width: '100%', fontSize: '20px', padding: '10px' }}>
           <h1>Lista de clientes</h1>
+          <p>Token atual: {apiToken}</p>
         </div>
         <div style={{ background: '#ececec57', display: 'flex', justifyContent: 'center' }}>
           {isLoading && !data ? (
