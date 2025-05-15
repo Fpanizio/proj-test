@@ -3,27 +3,41 @@ import styles from '../styles/Home.module.css'
 import { useQuery } from '@tanstack/react-query'
 import AccordionCustom from '../components/AccordionCustom'
 import { useServiceClientes } from '../service/clientes'
-import { Button, CircularProgress, Input, Link, Select, Stack } from '@chakra-ui/react'
-import { useState } from 'react'
+import { Button, CircularProgress, Input, Link, Select } from '@chakra-ui/react'
+import { useEffect, useState } from 'react'
 import { ArrowBackIcon, ArrowForwardIcon } from '@chakra-ui/icons'
 import { useTokenContext } from '../contexts/TokenContext'
 
 export default function Home() {
-
   const { getAllClientes } = useServiceClientes();
   const [page, setPage] = useState(1);
   const { apiToken } = useTokenContext();
 
+  // Estados para os filtros de busca
+  const [searchType, setSearchType] = useState('');
+  const [searchValue, setSearchValue] = useState('');
 
   const { isLoading, error, data } = useQuery({
-    queryKey: ['getAllData', page],
-    queryFn: () => getAllClientes(page, apiToken),
+    queryKey: ['getAllData', page, searchValue],
+    queryFn: () => {
+      const filters = {
+        nome: searchType === 'NOME' ? searchValue : '',
+        cpf: searchType === 'CPF' ? searchValue : '',
+        cnpj: searchType === 'CNPJ' ? searchValue : '',
+      };
+      return getAllClientes(page, apiToken, filters.nome, filters.cnpj, filters.cpf);
+    },
     staleTime: 1000 * 60 * 5, // 5 minutes
-  })
+  });
+
+  const isSearchDisabled = !['CPF', 'CNPJ', 'NOME'].includes(searchType);
 
   const handleNextPage = () => setPage((prev) => prev + 1);
   const handlePreviousPage = () => setPage((prev) => Math.max(prev - 1, 1));
 
+  useEffect(() => {
+    setSearchValue('');
+  }, [searchType]);
 
   return (
     <>
@@ -37,14 +51,38 @@ export default function Home() {
       <main className={styles.main}>
         <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', width: '100%', fontSize: '20px', padding: '10px' }}>
           <h1>Lista de clientes</h1>
+          <div style={{ display: 'flex', alignItems: 'center', flexDirection: 'row-reverse', width: '100%', gap: '10px' }}>
+            <Input
+              placeholder={searchType
+                ? `Digite o ${searchType.toLowerCase()}`
+                : 'Selecione um tipo primeiro'
+              }
+              value={searchValue}
+              onChange={e => setSearchValue(e.target.value)}
+              isDisabled={isSearchDisabled}
+            />
+            <div style={{ width: '200px' }}>
+              <Select
+                size={'md'}
+                placeholder="Selecione"
+                value={searchType}
+                onChange={e => setSearchType(e.target.value)}
+              >
+                <option value="CPF">CPF</option>
+                <option value="CNPJ">CNPJ</option>
+                <option value="NOME">NOME</option>
+              </Select>
+            </div>
+          </div>
         </div>
         <div style={{ background: '#ececec57', display: 'flex', justifyContent: 'center' }}>
           {isLoading && !data ? (
-            <div style={{ display: 'flex', justifyContent: 'center', minHeight: '100vh', alignItems: 'center', }}>
+            <div style={{ display: 'flex', justifyContent: 'center', minHeight: '100vh', alignItems: 'center' }}>
               <CircularProgress isIndeterminate color='green.300' />
             </div>
-          ) : (<AccordionCustom data={data} />)}
-
+          ) : (
+            <AccordionCustom data={data} />
+          )}
         </div>
         <div style={{ display: 'flex', flexDirection: 'row-reverse', width: '100%', fontSize: '20px', paddingTop: '10px', gap: '10px', alignItems: 'center' }}>
           <Link href={'/forms'}>
@@ -62,5 +100,5 @@ export default function Home() {
         </div>
       </main>
     </>
-  )
+  );
 }
