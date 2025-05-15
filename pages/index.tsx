@@ -3,7 +3,7 @@ import styles from '../styles/Home.module.css'
 import { useQuery } from '@tanstack/react-query'
 import AccordionCustom from '../components/AccordionCustom'
 import { useServiceClientes } from '../service/clientes'
-import { Button, CircularProgress, Link } from '@chakra-ui/react'
+import { Button, CircularProgress, Input, Link, Select, Stack } from '@chakra-ui/react'
 import { useState } from 'react'
 import { ArrowBackIcon, ArrowForwardIcon } from '@chakra-ui/icons'
 import { useTokenContext } from '../contexts/TokenContext'
@@ -12,18 +12,18 @@ export default function Home() {
 
   const { getAllClientes } = useServiceClientes();
   const [page, setPage] = useState(1);
+  const { apiToken } = useTokenContext();
 
 
   const { isLoading, error, data } = useQuery({
     queryKey: ['getAllData', page],
-    queryFn: () => getAllClientes(page),
+    queryFn: () => getAllClientes(page, apiToken),
     staleTime: 1000 * 60 * 5, // 5 minutes
   })
 
   const handleNextPage = () => setPage((prev) => prev + 1);
   const handlePreviousPage = () => setPage((prev) => Math.max(prev - 1, 1));
 
-  const { apiToken } = useTokenContext();
 
   return (
     <>
@@ -35,9 +35,8 @@ export default function Home() {
       </Head>
 
       <main className={styles.main}>
-        <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', width: '100%', fontSize: '20px', padding: '10px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', width: '100%', fontSize: '20px', padding: '10px' }}>
           <h1>Lista de clientes</h1>
-          <p>Token atual: {apiToken}</p>
         </div>
         <div style={{ background: '#ececec57', display: 'flex', justifyContent: 'center' }}>
           {isLoading && !data ? (

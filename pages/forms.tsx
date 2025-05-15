@@ -16,12 +16,14 @@ import {
 } from '@chakra-ui/react'
 import { useForm, useWatch } from "react-hook-form";
 import { resolver } from "../schemas/cliente.schema";
+import { useTokenContext } from "../contexts/TokenContext";
 
 export default function Forms() {
     const toast = useToast();
     const router = useRouter();
     const { codigo } = router.query; // aqui vem "2274"
     const { getOneCliente, putCliente, postCliente } = useServiceClientes();
+    const { apiToken } = useTokenContext();
 
 
     const isEditMode = Boolean(codigo); // Verifica se está no modo de edição
@@ -52,7 +54,7 @@ export default function Forms() {
         queryKey: ['getDataId'],
         queryFn: () => {
             if (isEditMode && typeof codigo === 'string') {
-                return getOneCliente([codigo]);
+                return getOneCliente([codigo], apiToken);
             }
             return Promise.reject(new Error("Invalid codigo format"));
         },
@@ -62,9 +64,9 @@ export default function Forms() {
     const mutation = useMutation({
         mutationFn: async (formData: any) => {
             if (isEditMode && typeof codigo === 'string') {
-                return await putCliente(formData); // Atualiza cliente no modo de edição
+                return await putCliente(formData, apiToken); // Atualiza cliente no modo de edição
             } else {
-                return await postCliente(formData); // Cria novo cliente no modo de criação
+                return await postCliente(formData, apiToken); // Cria novo cliente no modo de criação
             }
         },
         onSuccess: () => {
