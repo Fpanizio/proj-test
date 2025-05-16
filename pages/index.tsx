@@ -4,7 +4,7 @@ import { useQuery } from '@tanstack/react-query'
 import AccordionCustom from '../components/AccordionCustom'
 import { useServiceClientes } from '../service/clientes'
 import { Button, CircularProgress, Input, Link, Select } from '@chakra-ui/react'
-import { useEffect, useState } from 'react'
+import { use, useEffect, useState } from 'react'
 import { ArrowBackIcon, ArrowForwardIcon } from '@chakra-ui/icons'
 import { useTokenContext } from '../contexts/TokenContext'
 
@@ -25,7 +25,7 @@ export default function Home() {
         cpf: searchType === 'CPF' ? searchValue : '',
         cnpj: searchType === 'CNPJ' ? searchValue : '',
       };
-      return getAllClientes(page, apiToken, filters.nome, filters.cnpj, filters.cpf);
+      return getAllClientes(page, limite, apiToken, filters.nome, filters.cnpj, filters.cpf);
     },
     staleTime: 1000 * 60 * 5, // 5 minutes
   });
@@ -38,6 +38,15 @@ export default function Home() {
   useEffect(() => {
     setSearchValue('');
   }, [searchType]);
+
+  const [limite, setLimite] = useState(10)
+
+  let totalpages: number = 0;
+  useEffect(() => {
+    totalpages = data?.registros / limite
+  }, [data])
+
+
 
   return (
     <>
@@ -93,10 +102,35 @@ export default function Home() {
           <Button colorScheme='teal' variant='solid' onClick={handleNextPage}>
             <ArrowForwardIcon />
           </Button>
-          <p><span style={{ textDecoration: 'underline' }}>{page}</span></p>
+          <div>{Array.from({ length: Math.ceil((data?.registros || 0) / limite) }, (_, i) => (
+            <Button
+              key={i + 1}
+              colorScheme={page === i + 1 ? 'teal' : 'gray'}
+              variant={page === i + 1 ? 'solid' : 'outline'}
+              onClick={() => setPage(i + 1)}
+              size="sm"
+            >
+              {i + 1}
+            </Button>
+          ))}</div>
           <Button colorScheme='teal' variant='solid' onClick={handlePreviousPage} isDisabled={page === 1}>
             <ArrowBackIcon />
           </Button>
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'row', gap: '10px', margin: '10px 0', justifyContent: 'flex-end' }}>
+          <h1>Total de clientes por vez</h1>
+          <div style={{ width: '150px' }}>
+            <Select
+              size={'md'}
+              placeholder="Selecione"
+              value={limite}
+              onChange={e => setLimite(Number(e.target.value))}
+            >
+              <option value={10}>10</option>
+              <option value={25}>20</option>
+              <option value={50}>50</option>
+            </Select>
+          </div>
         </div>
       </main>
     </>

@@ -6,6 +6,7 @@ export const useServiceClientes = () => {
 
     const getAllClientes = async (
         page: number = 1,
+        limite: number = 10,
         token: string,
         nome: string = "",
         cnpj: string = "",
@@ -14,10 +15,11 @@ export const useServiceClientes = () => {
         try {
             const filtros = { codigo: 0, nome, cnpj, cpf };
 
+
             // 1) Serializa e gera a query string já escapada
             const params = new URLSearchParams({
                 page: String(page),
-                limit: "10",
+                limit: String(limite),
                 filtros: JSON.stringify(filtros),
             });
 
