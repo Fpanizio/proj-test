@@ -7,7 +7,6 @@ export const useServiceClientes = () => {
     const getAllClientes = async (
         page: number = 1,
         limite: number = 10,
-        token: string,
         nome: string = "",
         cnpj: string = "",
         cpf: string = ""

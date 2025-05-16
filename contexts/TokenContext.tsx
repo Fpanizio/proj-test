@@ -9,45 +9,48 @@ interface TokenContextType {
 export const TokenContext = createContext<TokenContextType | undefined>(undefined);
 
 export const TokenProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-    const [apiToken, setApiToken] = useState(() => {
-        // Recupera o token do cookie ao inicializar
-        return Cookies.get('apiToken') || '';
-    });
-    const { getTokenFromApi } = useServiceToken();
-
-    const expiresIn = 0.5; // Expira em 12 horas
+    const [apiToken, setApiToken] = useState<string>(
+        () => Cookies.get('apiToken') || ''
+    );
+    const { getTokenFromApi, testApiToken } = useServiceToken();
 
     useEffect(() => {
         let isMounted = true;
 
-        const fetchTokenIfExpired = async () => {
-            const tokenFromCookie = Cookies.get('apiToken');
-            if (!tokenFromCookie) {
-                try {
-                    const token = await getTokenFromApi();
-                    if (isMounted) {
-                        setApiToken(token.accessToken);
-                        Cookies.set('apiToken', token.accessToken, { expires: expiresIn });
-                    }
-                } catch (error) {
-                    console.error('Failed to fetch token from API:', error);
-                    if (isMounted) {
-                        const fallbackToken = 'defaultFallbackToken';
-                        setApiToken(fallbackToken);
-                        Cookies.set('apiToken', fallbackToken, { expires: expiresIn });
-                    }
+        const fetchAndStoreToken = async () => {
+            try {
+                const tokenResponse = await getTokenFromApi();
+                const token = tokenResponse.accessToken ?? tokenResponse.token ?? '';
+
+                await testApiToken(token);
+
+                if (isMounted) {
+                    setApiToken(token);
+                    const expiresAt = new Date(Date.now() + 30 * 60 * 1000); // agora + 30min
+                    Cookies.set('apiToken', token, { expires: expiresAt });
                 }
-            } else {
-                setApiToken(tokenFromCookie);
+            } catch (error) {
+                console.error('Falha ao obter ou validar token:', error);
+                if (isMounted) {
+                    const fallbackToken = 'defaultFallbackToken';
+                    setApiToken(fallbackToken);
+                    const expiresAt = new Date(Date.now() + 30 * 60 * 1000);
+                    Cookies.set('apiToken', fallbackToken, { expires: expiresAt });
+                }
             }
         };
 
-        fetchTokenIfExpired();
+        const existing = Cookies.get('apiToken');
+        if (!existing) {
+            fetchAndStoreToken();
+        } else {
+            setApiToken(existing);
+        }
 
         return () => {
             isMounted = false;
         };
-    }, [getTokenFromApi]);
+    }, [getTokenFromApi, testApiToken]);
 
     return (
         <TokenContext.Provider value={{ apiToken }}>

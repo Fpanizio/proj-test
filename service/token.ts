@@ -25,5 +25,27 @@ export const useServiceToken = () => {
         }
     }
 
-    return { getTokenFromApi }
+    const testApiToken = async (token: string) => {
+        try {
+            const url = `https://api.serverlondrisoft.com:9050/autenticador/TestarApi/`;
+            const response = await fetch(url, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${token}`
+                },
+            });
+
+            if (!response.ok) {
+                throw new Error(`Erro ao testar token: ${response.status} ${response.statusText}`);
+            }
+
+            return await response.json();
+        } catch (error) {
+            console.error('Erro ao testar o token:', error);
+            throw error;
+        }
+    };
+
+    return { getTokenFromApi, testApiToken }
 }

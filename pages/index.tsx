@@ -4,14 +4,13 @@ import { useQuery } from '@tanstack/react-query'
 import AccordionCustom from '../components/AccordionCustom'
 import { useServiceClientes } from '../service/clientes'
 import { Button, CircularProgress, Input, Link, Select } from '@chakra-ui/react'
-import { use, useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { ArrowBackIcon, ArrowForwardIcon } from '@chakra-ui/icons'
-import { useTokenContext } from '../contexts/TokenContext'
+import Cookies from 'js-cookie'
 
 export default function Home() {
   const { getAllClientes } = useServiceClientes();
   const [page, setPage] = useState(1);
-  const { apiToken } = useTokenContext();
 
   // Estados para os filtros de busca
   const [searchType, setSearchType] = useState('');
@@ -25,8 +24,10 @@ export default function Home() {
         cpf: searchType === 'CPF' ? searchValue : '',
         cnpj: searchType === 'CNPJ' ? searchValue : '',
       };
-      return getAllClientes(page, limite, apiToken, filters.nome, filters.cnpj, filters.cpf);
+
+      return getAllClientes(page, limite, filters.nome, filters.cnpj, filters.cpf);
     },
+    enabled: !!Cookies.get('apiToken'),
     staleTime: 1000 * 60 * 5, // 5 minutes
   });
 
